@@ -1,0 +1,2 @@
+- Make sure your monitor is set to 1080p resolution
+- To set up a desktop link that is executed, see https://www.raspberrypi.org/forums/viewtopic.php?t=248380
