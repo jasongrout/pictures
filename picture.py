@@ -286,7 +286,7 @@ def reset_weights():
     # kernel = lambda x: (x+1)**-1.5
 
     # Linear fall-off
-    # kernel = lambda x: max(1-.2*i, 0)
+    # kernel = lambda x: max(1-.2*x, 0)
 
     normalization = kernel(0)
     def day_weight(day):
