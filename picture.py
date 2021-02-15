@@ -176,26 +176,13 @@ def convert(date):
     month = months[month]
     return day+' '+month+' '+year
 
-def month(name):
-    try:
-        return int(name[4:6])
-    except:
-        return None
-
 def group(data):
     """Group picture filenames like 20200528.jpg into days.
 
     For now, we also only include filenames that match the current month.
     """
     dic = {}
-    current_month = int(datetime.datetime.now().month)
     for name in data:
-#        try:
-#            month=month(name)
-#            if month is not None and month != current_month:
-#                continue
-#        except:
-#            pass
         start = name[:8]
         if start not in dic:
             dic[start] = [name]
@@ -271,43 +258,51 @@ groups = []
 days = []
 weights = []
 cumdist = []
-from normdist import NormalDist
-kernel = NormalDist(0, 1).pdf
-#kernel = lambda x: (x+1)**-1.5
 
 # weight the days logarithmically
 # See https://docs.python.org/3.5/library/random.html#examples-and-recipes
 from math import log
 import itertools
 from bisect import bisect
+from normdist import NormalDist
 
 def reset_weights():
     global weights, cumdist, groups, days
 
-    # If we have no days data, reset it
-    if len(days)==0:
+    # If we have hardly any pics left (by weight)
+    # This relies on the log weighting scale, and the kernel being normalized
+    if max(weights or [0])<=1e-5:
         groups = group(pic_files)
         days = list(groups.keys())
+
+    # Calculate the weights applied to each day based on how far their week
+    # is from the current week
+    current_week = datetime.datetime.now().isocalendar()[1]
+
+    kernel = NormalDist(0, 2).pdf
+    #kernel = lambda x: (x+1)**-1.5
+    normalization = kernel(0)
+    def day_weight(day):
+        try:
+            d = datetime.datetime.strptime(day, '%Y%m%d')
+        except:
+            # pictures without a date are automatically preferred as if they were 4 weeks away
+            return kernel(4)/normalization
+        week = d.isocalendar()[1]
+        tmp = abs(current_week - week)
+        # Absolute distance of the day's week from the current week
+        distance = min(tmp, 53-tmp)
+        # Weight the day by kernel
+        return kernel(distance)/normalization
 
     # use log base N for weights, so one picture weights the day at 1.0,
     # N pictures makes a weight of 2, N^2 pictures makes a weight of 3,
     # N^3 pictures makes a weight of 4, and so on
-
-    # Calculate the weights applied to each day based on how far their month is from the current month
-    current_month = int(datetime.datetime.now().month)
-    def day_weight(day):
-        m = month(day)
-        # pictures without dates are always in current month
-        if m is None:
-            return 1
-        tmp = abs(current_month - m)
-        # Absolute distance of the day's month from the current month
-        distance = min(tmp, 12-tmp)
-        # Weight the day by kernel
-        return kernel(distance)
-
     weights = [(log(len(groups[day]), 2)+1)*day_weight(day) for day in days]
     cumdist = list(itertools.accumulate(weights))
+
+    # for (d,w) in sorted(zip(days, weights), key=lambda x: x[1]):
+    #     print(d,"%f"%day_weight(d), "%f"%w)
 
 reset_weights()
 
