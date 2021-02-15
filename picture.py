@@ -52,6 +52,29 @@ import re
 import datetime
 
 
+from time import process_time
+
+class timer:
+    def __enter__(self):
+        self.t = process_time()
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.e = process_time()
+        self.elapsed = 1000*(self.e - self.t)
+
+    def __float__(self):
+        return float(self.elapsed)
+
+    def __coerce__(self, other):
+        return (float(self), other)
+
+    def __str__(self):
+        return str(float(self))
+
+    def __repr__(self):
+        return str(float(self))
+
 
 # Getting screen blanking to work well is a bit tricky.
 # 1. Edit /boot/config.txt and add 'hdmi_blanking=1' so that we can trigger the dpms off mode (see https://www.raspberrypi.org/documentation/configuration/config-txt/video.md and https://github.com/raspberrypi/linux/issues/487.)
@@ -237,16 +260,10 @@ position = -1
 history = [] # list of filenames that you have viewed
 # Get all of the filenames in the picture directory
 pic_files = os.listdir(path=PIC_DIRECTORY)
-groups = None
-days = None
-
-def reset_groups():
-    global groups, days
-
-    groups = group(pic_files)
-    days = list(groups.keys())
-
-reset_groups()
+groups = []
+days = []
+weights = []
+cumdist = []
 
 # weight the days logarithmically
 # See https://docs.python.org/3.5/library/random.html#examples-and-recipes
@@ -254,6 +271,21 @@ from math import log
 import itertools
 from bisect import bisect
 
+def reset_weights():
+    global weights, cumdist, groups, days
+
+    # If we have no days data, reset it
+    if len(days)==0:
+        groups = group(pic_files)
+        days = list(groups.keys())
+
+    # use log base N for weights, so one picture weights the day at 1.0,
+    # N pictures makes a weight of 2, N^2 pictures makes a weight of 3,
+    # N^3 pictures makes a weight of 4, and so on
+    weights = [log(len(groups[day]), 2)+1 for day in days]
+    cumdist = list(itertools.accumulate(weights))
+
+reset_weights()
 
 # Show the first picture after a second
 pygame.time.set_timer(PICTURE_CHANGE, 1000)
@@ -290,28 +322,21 @@ while True:
         if display_on():
             # pick a day, weighted according to cumdist, then pick a random pic from that day
             # See https://docs.python.org/3.5/library/random.html#examples-and-recipes
-
-            # use log base N for weights, so one picture weights the day at 1.0,
-            # N pictures makes a weight of 2, N^2 pictures makes a weight of 3,
-            # N^3 pictures makes a weight of 4, and so on
-            if len(days)==0:
-                reset_groups()
-            weights = [log(len(groups[day]), 2)+1 for day in days]
-            cumdist = list(itertools.accumulate(weights))
-
             dayindex = bisect(cumdist, random.random() * cumdist[-1])
             day = days[dayindex]
-
             x = random.choice(groups[day])
             history.append(x)
 
+            position = -1
+            show(history[position])
+
+            # Update the pics to remove the one we just showed so we don't show it again
             groups[day].remove(x)
             if len(groups[day])==0:
                 days.remove(day)
                 del groups[day]
+            reset_weights()
 
-            position = -1
-            show(history[position])
         pygame.time.set_timer(PICTURE_CHANGE,TIMER*60*1000)
 
 
