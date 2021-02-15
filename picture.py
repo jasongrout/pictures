@@ -31,7 +31,8 @@
 # https://ubuntuforums.org/showthread.php?t=1317747&page=3&p=9433671#post9433671
 
 # Set the variables so we can easily change the program
-FULLSCREEN = True
+FULLSCREEN = False
+SMALL_SCREEN_SIZE=(600,400)
 TIMER = 40 # minutes between picture changes
 FONTSIZE = 120
 FORMAT = 1
@@ -175,6 +176,12 @@ def convert(date):
     month = months[month]
     return day+' '+month+' '+year
 
+def month(name):
+    try:
+        return int(name[4:6])
+    except:
+        return None
+
 def group(data):
     """Group picture filenames like 20200528.jpg into days.
 
@@ -183,12 +190,12 @@ def group(data):
     dic = {}
     current_month = int(datetime.datetime.now().month)
     for name in data:
-        try:
-            month=int(name[4:6])
-            if month != current_month:
-                continue
-        except:
-            pass
+#        try:
+#            month=month(name)
+#            if month is not None and month != current_month:
+#                continue
+#        except:
+#            pass
         start = name[:8]
         if start not in dic:
             dic[start] = [name]
@@ -205,7 +212,7 @@ if FULLSCREEN:
     pygame.mouse.set_visible(False)
     screen = pygame.display.set_mode((0,0), pygame.FULLSCREEN) # fullscreen
 else:
-    screen = pygame.display.set_mode((300, 200)) # development
+    screen = pygame.display.set_mode(SMALL_SCREEN_SIZE) # development
 
 
 # Define custom pygame events we will use.
@@ -240,7 +247,7 @@ def show(filename = None):
         offset = round((x-n)/2)
         screen.blit(cimage, (offset,0))
     else:
-        pygame.transform.smoothscale(cimage, (300, 200), screen) # development
+        pygame.transform.smoothscale(cimage, SMALL_SCREEN_SIZE, screen) # development
 
 
     # Put the filename 5 pixels from the bottom of the screen, 10 pixels from left edge
@@ -264,6 +271,9 @@ groups = []
 days = []
 weights = []
 cumdist = []
+from normdist import NormalDist
+kernel = NormalDist(0, 1).pdf
+#kernel = lambda x: (x+1)**-1.5
 
 # weight the days logarithmically
 # See https://docs.python.org/3.5/library/random.html#examples-and-recipes
@@ -282,7 +292,21 @@ def reset_weights():
     # use log base N for weights, so one picture weights the day at 1.0,
     # N pictures makes a weight of 2, N^2 pictures makes a weight of 3,
     # N^3 pictures makes a weight of 4, and so on
-    weights = [log(len(groups[day]), 2)+1 for day in days]
+
+    # Calculate the weights applied to each day based on how far their month is from the current month
+    current_month = int(datetime.datetime.now().month)
+    def day_weight(day):
+        m = month(day)
+        # pictures without dates are always in current month
+        if m is None:
+            return 1
+        tmp = abs(current_month - m)
+        # Absolute distance of the day's month from the current month
+        distance = min(tmp, 12-tmp)
+        # Weight the day by kernel
+        return kernel(distance)
+
+    weights = [(log(len(groups[day]), 2)+1)*day_weight(day) for day in days]
     cumdist = list(itertools.accumulate(weights))
 
 reset_weights()
