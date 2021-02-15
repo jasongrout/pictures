@@ -63,6 +63,7 @@ class timer:
     def __exit__(self, type, value, traceback):
         self.e = process_time()
         self.elapsed = 1000*(self.e - self.t)
+        print(self)
 
     def __float__(self):
         return float(self.elapsed)
@@ -280,11 +281,17 @@ def reset_weights():
     current_week = datetime.datetime.now().isocalendar()[1]
 
     kernel = NormalDist(0, 2).pdf
-    #kernel = lambda x: (x+1)**-1.5
+
+    # Power law fall-off
+    # kernel = lambda x: (x+1)**-1.5
+
+    # Linear fall-off
+    # kernel = lambda x: max(1-.2*i, 0)
+
     normalization = kernel(0)
     def day_weight(day):
         try:
-            d = datetime.datetime.strptime(day, '%Y%m%d')
+            d = datetime.datetime(int(day[:4]), int(day[4:6]), int(day[6:8]))
         except:
             # pictures without a date are automatically preferred as if they were 4 weeks away
             return kernel(4)/normalization
