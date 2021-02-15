@@ -31,7 +31,7 @@
 # https://ubuntuforums.org/showthread.php?t=1317747&page=3&p=9433671#post9433671
 
 # Set the variables so we can easily change the program
-FULLSCREEN = False
+FULLSCREEN = True
 SMALL_SCREEN_SIZE=(600,400)
 TIMER = 40 # minutes between picture changes
 FONTSIZE = 120
