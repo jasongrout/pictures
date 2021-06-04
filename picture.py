@@ -379,14 +379,16 @@ while True:
         show()
 
     # Show the previous picture
-    if (f.type == pygame.KEYDOWN and f.key == pygame.K_LEFT) or (f.type == pygame.MOUSEBUTTONDOWN and f.button == 1):
+    if ((f.type == pygame.KEYDOWN and f.key == pygame.K_LEFT)
+        or (f.type == pygame.MOUSEBUTTONDOWN and f.button == 1)):
         if len(history) > -position:
             position = position-1
             show(history[position])
             pygame.time.set_timer(PICTURE_CHANGE,TIMER*60*1000)
 
     # Show the next picture
-    if (f.type == pygame.KEYDOWN and f.key == pygame.K_RIGHT) or (f.type == pygame.MOUSEBUTTONDOWN and f.button == 3):
+    if ((f.type == pygame.KEYDOWN and f.key == pygame.K_RIGHT)
+        or (f.type == pygame.MOUSEBUTTONDOWN and f.button == 3)):
         if position < -1:
             position = position+1
             show(history[position])
