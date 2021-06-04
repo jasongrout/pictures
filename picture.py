@@ -280,7 +280,7 @@ def reset_weights():
     # is from the current week
     current_week = datetime.datetime.now().isocalendar()[1]
 
-    kernel = NormalDist(0, 2).pdf
+    kernel = NormalDist(0, 1.5).pdf
 
     # Power law fall-off
     # kernel = lambda x: (x+1)**-1.5
@@ -294,7 +294,7 @@ def reset_weights():
             d = datetime.datetime(int(day[:4]), int(day[4:6]), int(day[6:8]))
         except:
             # pictures without a date are automatically preferred as if they were 4 weeks away
-            return kernel(4)/normalization
+            return kernel(3)/normalization
         week = d.isocalendar()[1]
         tmp = abs(current_week - week)
         # Absolute distance of the day's week from the current week
@@ -308,8 +308,8 @@ def reset_weights():
     weights = [(log(len(groups[day]), 2)+1)*day_weight(day) for day in days]
     cumdist = list(itertools.accumulate(weights))
 
-    # for (d,w) in sorted(zip(days, weights), key=lambda x: x[1]):
-    #     print(d,"%f"%day_weight(d), "%f"%w)
+    #for (d,w) in sorted(zip(days, weights), key=lambda x: x[1]):
+    #    print(d,"%f"%day_weight(d), "%f"%w)
 
 reset_weights()
 
