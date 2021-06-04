@@ -346,10 +346,15 @@ while True:
         or (f.type == pygame.MOUSEBUTTONDOWN and f.button == 2)):
 
         if display_on():
-            # pick a day, weighted according to cumdist, then pick a random pic from that day
-            # See https://docs.python.org/3.5/library/random.html#examples-and-recipes
-            dayindex = bisect(cumdist, random.random() * cumdist[-1])
-            day = days[dayindex]
+            
+            if random.random() < 0.1:
+                # Every tenth time or so, pick a picture from a random day, just to
+                # change things up a bit
+                day = random.choice(days)
+            else:
+                # pick a day, weighted according to cumdist, then pick a random pic from that day
+                # See https://docs.python.org/3.5/library/random.html#examples-and-recipes
+                day = days[bisect(cumdist, random.random() * cumdist[-1])]
             x = random.choice(groups[day])
             history.append(x)
 
