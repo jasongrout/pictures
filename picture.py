@@ -427,7 +427,8 @@ while True:
 
     if f.type == UPDATE_TIME:
         # Show the current picture, which will update the time as well
-        show()
+        if display_on():
+            show()
         # Set the next update at the start of the next minute
         pygame.time.set_timer(UPDATE_TIME, next_time())
 
