@@ -15,29 +15,22 @@
 # [ ] Handle pics with different sizes/orientations. Rotate? Put upright and blur the background? Center smaller pics
 # [ ] Hook up hardware buttons and switch: buttons to go prev/next, switch to hold a pic, buttons to rate a pic up or down.
 
-# autorun: http://www.raspberry-projects.com/pi/pi-operating-systems/raspbian/auto-running-programs-gui
-# control LEDs: https://www.jeffgeerling.com/blogs/jeff-geerling/controlling-pwr-act-leds-raspberry-pi - set the trigger for each led (if 'none' doesn't work to turn them off, try 'gpio')
-
-
-# In order to get the screen blanking to work, edit /boot/config.txt and add `hdmi_blanking=1`. Then you can use `xset dpms force off` to blank the screen and turn off the monitor until another key is pressed. See https://www.raspberrypi.org/documentation/configuration/config-txt/video.md and https://github.com/raspberrypi/linux/issues/487.
-
-
-###########
-
-
-#turns off the screen, works in python.
-# https://wiki.libsdl.org/FAQUsingSDL
-# https://stackoverflow.com/questions/39914670/sdl-pollevent-causes-screen-to-wake-up-after-xset-dpms-force-off
-# https://ubuntuforums.org/showthread.php?t=1317747&page=3&p=9433671#post9433671
-
 # Set the variables so we can easily change the program
 FULLSCREEN = True
 SMALL_SCREEN_SIZE=(600,400)
 TIMER = 40 # minutes between picture changes
 FONTSIZE = 120
+
+# The default text format:
+# - 0: no text
+# - 1: date
+# - 2: filename
 FORMAT = 1
+
+# The directory of pictures
 PIC_DIRECTORY = '/home/pi/Export1080p/'
-# Time of sleep and wake each day
+
+# Time (hour, minute) of sleep and wake each day
 WAKE = (6, 30)
 SLEEP = (21,30)
 
