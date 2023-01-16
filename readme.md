@@ -57,13 +57,14 @@ Because the program is designed to cycle pictures using just a mouse, we also li
 
 ### Picture selection
 
-We show pictures by randomly picking a day weighted by how far the day is from the current day and the log of how many pictures in that day that we haven't shown to you yet. This attempts to pick a picture that:
+The picture selection algorithm revolves around picking a day of the year, then showing a random picture that was taken on that day of the year that we haven't displayed yet. The interesting part is how to pick a day of the year that we'd like to show a picture from. We weight the days of the year in two different ways simultaneously to try to pick a day:
 
-1. **You haven't seen yet** (we keep track of which pictures we've shown you, and avoid picking them again until there are relatively few pictures left to show you), and
-2. **is more likely to be close to this time of year** (we weight days we pick from based on how far from the current day it is, following a normal distribution), and 
-3. **likely is different from other pictures you've been seeing** (we assume that the number of pictures in a day follows a power law, and that if there are a *lot* of pictures in a single day, they are likely to be similar, so we weight the day by the log of the number of pictures rather than the actual number of pictures)
+1. **close to the current week of the year** - we center a normal distribution at the current week of the year and weight all weeks in the year by this normal distribution. We work at the week level instead of the day level so that weights do not dramatically shift day-to-day. We picked the parameters of the normal distribution so that you usually get pictures from the current month, occasionally get pictures from the month before or the month after, and very rarely get pictures from outside of that range.
+2. **that has a lot of unseen pictures** - we assume that days typically have either just a couple of pictures or have dozens/hundreds of pictures from a really cool activity. If we weighted the days by how many total pictures were in that day, you'd almost never see a picture from the day with just a couple of pictures. We want to be smarter than that, so we assume the day with hundreds of pictures is probably centered around a single story, and we don't want to always just be swamped by pictures just from that single story. Therefore we weight days based on the *logarithm* of the number of unseen pictures in that day. Currently the weight for a day is calculated as one plus the log base 2 of the number of unseen pictures in the day, which means that a day with 128 unseen pictures is only 8 times more likely to be picked than a day in the same week with one unseen picture. The effect is that we bias towards picking pictures from the cool activities with lots of pictures, but we still are pretty likely to see pictures from normal days as well.
 
-But given all that, we occasionally surprise you with a new picture from a completely random day just for fun.
+We multiply these two weights together to get a weight for every day, then randomly pick a day of the year according to these weights. Every time we show a picture, we recalculate the weights ignoring it and other pictures we've displayed. If the sum of the weights is very small (i.e., we don't have very many pictures left that we'd like to show), then we forget what pictures we've shown you and start with a fresh weight calculation including all pictures.
+
+Given all that, we occasionally ignore all of the above and surprise you with a new picture from a completely random day, just for fun. This happens about 10% of the time, i.e., about once or twice a day.
 
 All history about what pictures were displayed is lost when the program is restarted.
 
