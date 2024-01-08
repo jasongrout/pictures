@@ -280,7 +280,7 @@ def reset_weights():
 
     # If the pic directory has changed (or mtime been reset), rescan all the files
     if  pic_dir_mtime != os.path.getmtime(PIC_DIRECTORY):
-        pic_files = set(os.listdir(path=PIC_DIRECTORY)) - seen
+        pic_files = sorted(set(os.listdir(path=PIC_DIRECTORY)) - seen)
         pic_dir_mtime = os.path.getmtime(PIC_DIRECTORY)
         groups = group(pic_files)
         days = list(groups.keys())
@@ -402,6 +402,25 @@ while True:
         if position < -1:
             position += 1
             show(history[position])
+            pygame.time.set_timer(PICTURE_CHANGE,TIMER*60*1000)
+
+    # Show the next picture in sorted order that we haven't seen yet (i.e., chronologically)
+    # Do not put this pic in our history
+    if f.type == pygame.KEYDOWN and f.key == pygame.K_DOWN:
+        # Find the place just after where the current pic would have been
+        index = bisect_right(pic_files, CURRENT_PICTURE)
+        if index < len(pic_files):
+            show(pic_files[index])
+            pygame.time.set_timer(PICTURE_CHANGE,TIMER*60*1000)
+
+    # Show the previous picture in sorted order that we haven't seen yet (i.e., chronologically)
+    # Do not put this pic in our history
+    if f.type == pygame.KEYDOWN and f.key == pygame.K_UP:
+        # Find the place in the current pics array where we would have to insert the current pic
+        # The pic we want is just before this.
+        index = bisect_left(pic_files, CURRENT_PICTURE) - 1
+        if index > 0:
+            show(pic_files[index])
             pygame.time.set_timer(PICTURE_CHANGE,TIMER*60*1000)
 
     # Quit the program
