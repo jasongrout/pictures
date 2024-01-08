@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Expects the following to be installed:
 # pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib pillow
 

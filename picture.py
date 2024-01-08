@@ -208,6 +208,7 @@ font = pygame.freetype.SysFont('freesans', FONTSIZE)
 CURRENT_PICTURE = None
 CURRENT_IMAGE = None
 def show(filename = None):
+    """Show a picture. If filename is not specified, refresh the current picture."""
     global CURRENT_PICTURE
     global CURRENT_IMAGE
     if filename is None:
@@ -242,16 +243,23 @@ def show(filename = None):
     pygame.display.flip()
 
 
+# Total history of filenames that have been viewed, even across `seen` resets
+history = []
 
-# Set up the picture history
+# The position of the current picture in the history array
 position = -1
-history = [] # list of filenames that you have viewed
-# Get all of the filenames in the picture directory
-pic_files = os.listdir(path=PIC_DIRECTORY)
+
+# Tracking data for the list of possible pictures, weights, etc.
+pic_files = []
+pic_dir_mtime = None
 groups = []
 days = []
 weights = []
 cumdist = []
+
+# The pics we have already seen in the current cycle of pictures. This can be reset
+# if we don't have many pictures left to show.
+seen = set()
 
 # weight the days logarithmically
 # See https://docs.python.org/3.5/library/random.html#examples-and-recipes
@@ -261,11 +269,19 @@ from bisect import bisect
 from normdist import NormalDist
 
 def reset_weights():
-    global weights, cumdist, groups, days
+    """Reset the weights on the remaining pics in groups and days"""
+    global pic_dir_mtime, pic_files, weights, cumdist, groups, days
 
-    # If we have hardly any pics left (by weight)
-    # This relies on the log weighting scale, and the kernel being normalized
+    # If we have hardly any pics left (by weight), reset everything so the scan picks up everything
+    # The threshold value relies on the log weighting scale and the kernel being normalized
     if max(weights or [0])<=1e-5:
+        seen = set()
+        pic_dir_mtime = None
+
+    # If the pic directory has changed (or mtime been reset), rescan all the files
+    if  pic_dir_mtime != os.path.getmtime(PIC_DIRECTORY):
+        pic_files = set(os.listdir(path=PIC_DIRECTORY)) - seen
+        pic_dir_mtime = os.path.getmtime(PIC_DIRECTORY)
         groups = group(pic_files)
         days = list(groups.keys())
 
@@ -350,6 +366,7 @@ while True:
                 day = days[bisect(cumdist, random.random() * cumdist[-1])]
             x = random.choice(groups[day])
             history.append(x)
+            seen.add(x)
 
             position = -1
             show(history[position])
@@ -371,19 +388,19 @@ while True:
             FORMAT = 0
         show()
 
-    # Show the previous picture
+    # Show the previous picture in history
     if ((f.type == pygame.KEYDOWN and f.key == pygame.K_LEFT)
         or (f.type == pygame.MOUSEBUTTONDOWN and f.button == 1)):
         if len(history) > -position:
-            position = position-1
+            position -= 1
             show(history[position])
             pygame.time.set_timer(PICTURE_CHANGE,TIMER*60*1000)
 
-    # Show the next picture
+    # Show the next picture in history
     if ((f.type == pygame.KEYDOWN and f.key == pygame.K_RIGHT)
         or (f.type == pygame.MOUSEBUTTONDOWN and f.button == 3)):
         if position < -1:
-            position = position+1
+            position += 1
             show(history[position])
             pygame.time.set_timer(PICTURE_CHANGE,TIMER*60*1000)
 
@@ -404,22 +421,26 @@ while True:
         # Cancel the quit event since we let up on the mouse button
         pygame.time.set_timer(pygame.QUIT,0)
 
+    # Blank the screen on pressing 'b'
     if (f.type == pygame.KEYDOWN
         and f.key == pygame.K_b):
         display_sleep()
 
+    # Wake the screen at the same time every day
     if f.type == SCREEN_WAKE:
         display_wake()
         # Set a sleep timer for 24 hours from now for the next wake
         pygame.time.set_timer(SCREEN_WAKE, 1000*60*60*24)
 
+    # Sleep the screen at the same time every day
     if f.type == SCREEN_SLEEP:
         display_sleep()
         # Set a sleep timer for 24 hours from now for the next sleep
         pygame.time.set_timer(SCREEN_SLEEP, 1000*60*60*24)
 
+    # Update the time every minute
     if f.type == UPDATE_TIME:
-        # Show the current picture, which will update the time as well
+        # Refresh the current picture, which will update the time
         if display_on():
             show()
         # Set the next update at the start of the next minute
