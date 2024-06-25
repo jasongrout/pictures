@@ -23,7 +23,6 @@ import pygame.freetype
 import subprocess
 import datetime
 from bisect import bisect, bisect_left, bisect_right
-from pathlib import Path
 from collections import defaultdict
 from math import log
 import itertools
@@ -32,7 +31,7 @@ from normdist import NormalDist
 # Set the variables so we can easily change the program
 FULLSCREEN = True
 SMALL_SCREEN_SIZE=(600,400)
-DISPLAY_TIME_MS = 40 * 60 * 1000 # miliseconds a picture is displayed by default
+DISPLAY_TIME_MS = 40 * 60 * 1000 # milliseconds a picture is displayed by default
 FONTSIZE = 120
 
 # The default text format:
@@ -42,7 +41,7 @@ FONTSIZE = 120
 FORMAT = 1
 
 # The directory of pictures
-PIC_DIRECTORY = Path('/home/pi/Export1080p/')
+PIC_DIRECTORY = '/home/pi/Export1080p/'
 
 # Time (hour, minute) of sleep and wake each day
 WAKE = (6, 30)
@@ -190,7 +189,7 @@ def show(filename = None):
         filename = CURRENT_PICTURE
         cimage = CURRENT_IMAGE
     else:
-        cimage = pygame.image.load(PIC_DIRECTORY / filename).convert()
+        cimage = pygame.image.load(os.path.join(PIC_DIRECTORY, filename)).convert()
         CURRENT_PICTURE = filename
         CURRENT_IMAGE = cimage
 
@@ -248,9 +247,9 @@ def reset_weights():
         PIC_DIRECTORY_MTIME = None
 
     # If the pic directory has changed (or mtime been reset), rescan all the files
-    if  PIC_DIRECTORY_MTIME != PIC_DIRECTORY.stat().st_mtime:
+    if  PIC_DIRECTORY_MTIME != os.path.getmtime(PIC_DIRECTORY):
         PIC_FILES = sorted(set(os.listdir(PIC_DIRECTORY)) - PICS_SEEN)
-        PIC_DIRECTORY_MTIME = PIC_DIRECTORY.stat().st_mtime
+        PIC_DIRECTORY_MTIME = os.path.getmtime(PIC_DIRECTORY)
         PIC_GROUPS = group_by_day(PIC_FILES)
         PIC_DAYS = list(PIC_GROUPS.keys())
 
