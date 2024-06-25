@@ -132,7 +132,7 @@ def display_wake():
 def display_on():
     """Return True if the display is on, otherwise False."""
     # TODO: use pykms directly
-    output = subprocess.check_output('ddcutil getvcp d6')
+    output = subprocess.check_output('ddcutil getvcp d6', shell=True).decode()
     if '0x04' in output:
         return True
     elif '0x01' in output:
