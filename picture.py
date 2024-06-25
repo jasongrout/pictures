@@ -44,7 +44,7 @@ import pygame.freetype
 import subprocess
 import re
 import datetime
-
+from bisect import bisect_left, bisect_right
 
 from time import process_time
 
