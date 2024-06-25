@@ -53,21 +53,25 @@ def refresh_creds():
 def get_items(destdir, google_photos, max_items=1000):
     items = []
     nextpagetoken = None
+    pages = 0
     # The default number of media items to return at a time is 25. The maximum pageSize is 100.
     # while nextpagetoken != '':
-    while len(items) < max_items:
-        print(f"Retrieving photo metadata: {len(items)}", end='\r')
+    while nextpagetoken != ""  and len(items) < max_items:
+        print(f"Retrieving page {pages} of photo metadata: {len(items)} items", end='\r')
         results = google_photos.mediaItems().list(pageSize=100, pageToken=nextpagetoken).execute()
 
         # If we don't get any result, abort since something is wrong
         unfiltered_results = results.get('mediaItems', None)
-        if unfiltered_results is None:
-            break
+
+        #if unfiltered_results is None:
+        #    print('did not get any media items', results)
+        #    break
 
         # add anything new to the list of files to get
-        items += [i for i in unfiltered_results if not (destdir / item_to_filename(i)).exists()]
+        if unfiltered_results is not None:
+            items += [i for i in unfiltered_results if not (destdir / item_to_filename(i)).exists()]
         nextpagetoken = results.get('nextPageToken', '')
-    print(f"Retrieved photo metadata: {len(items)}")
+    print(f"Retrieved {pages} of photo metadata: {len(items)} items")
     return items
 
 # A translation table to remove :-ZT characters
@@ -102,7 +106,9 @@ def process_item(tmpdir, destdir, item):
         subprocess.check_output(f"mogrify -resize '1920x1080>' '{tmppath}'", shell=True)
 
         # Change the file modification/access time in python - even if the file does not have exif time metadata
-        creation = datetime.fromisoformat(item['mediaMetadata']['creationTime']).timestamp()
+        #creation = datetime.fromisoformat(item['mediaMetadata']['creationTime']).timestamp()
+        creation = datetime.strptime(item['mediaMetadata']['creationTime'], '%Y-%m-%dT%H:%M:%SZ').timestamp()
+
         os.utime(tmppath, (creation, creation))
 
         # exif changing the access time
@@ -115,21 +121,43 @@ def process_item(tmpdir, destdir, item):
     return destpath
 
 
+
+
+import threading
+import time
+import sys
+
+def timeout():
+    """Function to stop the program after 10 minutes"""
+    time.sleep(60)  # 600 seconds = 10 minutes
+    print("Time is up! Exiting the program.")
+    sys.exit()  # Exit the program
+
+
+
 if __name__ == "__main__":
 
+    # Start the timer thread
+    # timer_thread = threading.Thread(target=timeout)
+    # timer_thread.daemon = True  # Daemon threads exit when the program does
+    # timer_thread.start()
+
+
+
+    os.chdir(Path(__file__).resolve().parent)
     with tempfile.TemporaryDirectory() as tmpdirname:
         print('Downloading to', tmpdirname)
         tmpdir = Path(tmpdirname)
 
-        destdir = Path('./pics')
-        max_items = 20
+        destdir = Path('/home/pi/Export1080p')
+        max_items = 200
         google_photos = refresh_creds()
         items = get_items(destdir, google_photos, max_items)
         
         from concurrent.futures import ThreadPoolExecutor, as_completed
         
         # specify the number of worker threads you want to use
-        max_workers = 10
+        max_workers = 3
         # create a ThreadPoolExecutor
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             futures = {executor.submit(process_item, tmpdir, destdir, item) for item in items}
