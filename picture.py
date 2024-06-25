@@ -146,7 +146,7 @@ def format_filename(filename):
         return ''
     elif FORMAT == 1:
         if filename[0] == '2':
-            return datetime.strptime(filename[:8], "%Y%m%d").strftime("%d %b %Y")
+            return datetime.datetime.strptime(filename[:8], "%Y%m%d").strftime("%d %b %Y")
         else:
             return ''
     elif FORMAT == 2:
