@@ -239,17 +239,17 @@ PICS_SEEN = set()
 
 def reset_weights():
     """Reset the weights on the remaining pics in groups and days"""
-    global PIC_DIRECTORY_MTIME, PIC_FILES, DAY_WEIGHTS, CUM_DAY_WEIGHTS, PIC_GROUPS, PIC_DAYS
+    global PIC_DIRECTORY_MTIME, PIC_FILES, PICS_SEEN, DAY_WEIGHTS, CUM_DAY_WEIGHTS, PIC_GROUPS, PIC_DAYS
 
     # If we have hardly any pics left (by weight), reset everything so the scan picks up everything
     # The threshold value relies on the log weighting scale and the kernel being normalized
     if max(DAY_WEIGHTS or [0])<=1e-5:
-        seen = set()
+        PICS_SEEN = set()
         PIC_DIRECTORY_MTIME = None
 
     # If the pic directory has changed (or mtime been reset), rescan all the files
     if  PIC_DIRECTORY_MTIME != PIC_DIRECTORY.stat().st_mtime:
-        PIC_FILES = sorted(set(os.listdir(PIC_DIRECTORY)) - seen)
+        PIC_FILES = sorted(set(os.listdir(PIC_DIRECTORY)) - PICS_SEEN)
         PIC_DIRECTORY_MTIME = PIC_DIRECTORY.stat().st_mtime
         PIC_GROUPS = group_by_day(PIC_FILES)
         PIC_DAYS = list(PIC_GROUPS.keys())
