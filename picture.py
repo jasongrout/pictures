@@ -111,29 +111,45 @@ def screensaver_restore():
     if 'enabled' in SCREENSAVER_SETTINGS:
         subprocess.run('xset {}dpms'.format('+' if SCREENSAVER_SETTINGS['enabled'] else '-').split())
 
-os.environ['SDL_VIDEO_ALLOW_SCREENSAVER']='1'
-screensaver_off()
+# os.environ['SDL_VIDEO_ALLOW_SCREENSAVER']='1'
+# screensaver_off()
 
 
 def display_sleep():
     """Turn off the display."""
-    subprocess.run('xset dpms force off'.split())
-    DISPLAY=False
+    # see https://forums.raspberrypi.com/viewtopic.php?t=363392 for more info
+    os.system('ddcutil setvcp d6 4')
+    
+    # These did not work so well
+    # os.system('setterm -blank force')
+    # subprocess.run('setterm --blank 1', shell=True)
+    # subprocess.run('xset dpms force off'.split())
 
 def display_wake():
     """Turn on the display."""
-    subprocess.run('xset dpms force on'.split())
-    DISPLAY=True
+    # see https://forums.raspberrypi.com/viewtopic.php?t=363392 for more info
+    os.system('ddcutil setvcp d6 1')
+    # os.system('setterm -blank poke')
+    # subprocess.run('xset dpms force on'.split())
 
 def display_on():
     """Return True if the display is on, otherwise False."""
-    output = subprocess.check_output('xset q'.split(), text=True)
-    if 'Monitor is On' in output:
+    # TODO: use pykms directly
+    output = subprocess.check_output('ddcutil getvcp d6')
+    if '0x04' is in output:
         return True
-    elif 'Monitor is Off' in output:
+    elif '0x01' is in output:
         return False
     else:
         raise ValueError('Could not determine whether monitor was on or not')
+        
+    # output = subprocess.check_output('xset q'.split(), text=True)
+    # if 'Monitor is On' in output:
+    #     return True
+    # elif 'Monitor is Off' in output:
+    #     return False
+    # else:
+    #     raise ValueError('Could not determine whether monitor was on or not')
 
 def date (filename):
     """Format the filename string to display the date, depending on the global FORMAT."""
@@ -355,7 +371,6 @@ while True:
         or (f.type == pygame.MOUSEBUTTONDOWN and f.button == 2)):
 
         if display_on():
-            
             if random.random() < 0.1:
                 # Every tenth time or so, pick a picture from a random day, just to
                 # change things up a bit
@@ -444,6 +459,9 @@ while True:
     if (f.type == pygame.KEYDOWN
         and f.key == pygame.K_b):
         display_sleep()
+    # Any other key or mouse down makes sure we are awake if we are not
+    elif (f.type == pygame.KEYDOWN or f.type == pygame.MOUSEBUTTONDOWN) and not display_on():
+        display_wake()
 
     # Wake the screen at the same time every day
     if f.type == SCREEN_WAKE:
@@ -466,4 +484,4 @@ while True:
         pygame.time.set_timer(UPDATE_TIME, next_time())
 
 # Just before exiting, restore the screensaver settings
-screensaver_restore()
+# screensaver_restore()
