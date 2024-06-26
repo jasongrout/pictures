@@ -149,7 +149,7 @@ def format_filename(filename):
         else:
             return ''
     elif FORMAT == 2:
-        os.path.splitext(filename)[0]
+        return os.path.splitext(filename)[0]
 
 def group_by_day(data):
     """Group picture filenames like 20200528.jpg into days."""
