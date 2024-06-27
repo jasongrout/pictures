@@ -16,6 +16,10 @@
 # [ ] Handle pics with different sizes/orientations. Rotate? Put upright and blur the background? Center smaller pics
 # [ ] Hook up hardware buttons and switch: buttons to go prev/next, switch to hold a pic, buttons to rate a pic up or down.
 
+# [ ] Read in the next random pic + the next and previous chronological pics pre-emptively. We spend a lot of time in io buffers,
+#     so we should be able to eagerly do that read
+# [x] display_on is called a lot - perhaps we cache its output and only call every once in a while?
+
 from random import SystemRandom
 import pygame
 import os
@@ -120,13 +124,17 @@ SLEEP = (21,30)
 
 def display_sleep():
     """Turn off the display."""
+    global DISPLAY_ON
     # see https://forums.raspberrypi.com/viewtopic.php?t=363392 for more info
     os.system('ddcutil setvcp d6 4')
+    DISPLAY_ON = False
 
 def display_wake():
     """Turn on the display."""
+    global DISPLAY_ON
     # see https://forums.raspberrypi.com/viewtopic.php?t=363392 for more info
     os.system('ddcutil setvcp d6 1')
+    DISPLAY_ON = True
 
 def display_on():
     """Return True if the display is on, otherwise False."""
@@ -322,7 +330,7 @@ while True:
         or (f.type == pygame.KEYDOWN and (f.key == pygame.K_SPACE))
         or (f.type == pygame.MOUSEBUTTONDOWN and f.button == 2)):
 
-        if display_on():
+        if DISPLAY_ON:
             if random.random() < 0.1:
                 # Every tenth time or so, pick a picture from a random day, just to
                 # change things up a bit
@@ -410,7 +418,7 @@ while True:
         and f.key == pygame.K_b):
         display_sleep()
     # Any other key or mouse down makes sure we are awake if we are not
-    elif (f.type == pygame.KEYDOWN or f.type == pygame.MOUSEBUTTONDOWN) and not display_on():
+    elif (f.type == pygame.KEYDOWN or f.type == pygame.MOUSEBUTTONDOWN) and not DISPLAY_ON:
         display_wake()
 
     # Wake the screen at the same time every day
@@ -427,8 +435,10 @@ while True:
 
     # Update the time every minute
     if f.type == UPDATE_TIME:
+        # every so often when it is not time-sensitive, check DISPLAY_ON
+        DISPLAY_ON = display_on()
         # Refresh the current picture, which will update the time
-        if display_on():
+        if DISPLAY_ON:
             show()
         # Set the next update at the start of the next minute
         pygame.time.set_timer(UPDATE_TIME, next_time())
