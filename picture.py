@@ -173,18 +173,18 @@ UPDATE_TIME = pygame.USEREVENT + 3
 random = SystemRandom()
 font = pygame.freetype.SysFont('freesans', FONTSIZE)
 
-CURRENT_PICTURE = None
+CURRENT_FILENAME = None
 CURRENT_IMAGE = None
 def show(filename = None):
     """Show a picture. If filename is not specified, refresh the current picture."""
-    global CURRENT_PICTURE
+    global CURRENT_FILENAME
     global CURRENT_IMAGE
     if filename is None:
-        filename = CURRENT_PICTURE
+        filename = CURRENT_FILENAME
         cimage = CURRENT_IMAGE
     else:
         cimage = pygame.image.load(os.path.join(PIC_DIRECTORY, filename)).convert()
-        CURRENT_PICTURE = filename
+        CURRENT_FILENAME = filename
         CURRENT_IMAGE = cimage
 
     screen_width = screen.get_width()
@@ -367,7 +367,7 @@ while True:
     # Do not put this pic in our history
     if f.type == pygame.KEYDOWN and f.key == pygame.K_DOWN:
         # Find the place just after where the current pic would have been
-        index = bisect_right(PIC_FILES, CURRENT_PICTURE)
+        index = bisect_right(PIC_FILES, CURRENT_FILENAME)
         if index < len(PIC_FILES):
             show(PIC_FILES[index])
             pygame.time.set_timer(PICTURE_CHANGE,DISPLAY_TIME_MS)
@@ -377,7 +377,7 @@ while True:
     if f.type == pygame.KEYDOWN and f.key == pygame.K_UP:
         # Find the place in the current pics array where we would have to insert the current pic
         # The pic we want is just before this.
-        index = bisect_left(PIC_FILES, CURRENT_PICTURE) - 1
+        index = bisect_left(PIC_FILES, CURRENT_FILENAME) - 1
         if index > 0:
             show(PIC_FILES[index])
             pygame.time.set_timer(PICTURE_CHANGE,DISPLAY_TIME_MS)
