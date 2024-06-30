@@ -46,17 +46,22 @@ def screensaver_restore():
 # os.environ['SDL_VIDEO_ALLOW_SCREENSAVER']='1'
 # screensaver_off()
 
+def run(cmd):
+    print(f"running: {cmd}")
+    print(subprocess.check_output(cmd, shell=True))
+
 def display_sleep():
     """Turn off the display."""
-    subprocess.run('wlr-randr --output HDMI-A-1 --off'.split())
+    run('wlr-randr --output HDMI-A-1 --off')
+    run('wlr-randr')
 
 def display_wake():
     """Turn on the display."""
-    subprocess.run('wlr-randr --output HDMI-A-1 --on'.split())
+    run('wlr-randr --output HDMI-A-1 --on')
 
 def display_on(check=False):
     """Return True if the display is on, otherwise False."""
-    return True
+    return False
     output = subprocess.check_output('xset q'.split(), text=True)
     if 'Monitor is On' in output:
         return True
