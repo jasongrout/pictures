@@ -14,13 +14,14 @@ from collections import defaultdict
 from math import log
 import itertools
 from normdist import NormalDist
+from blanking_console import Console
+from blanking_wayland import Wayland
 
-if os.environ.get('XDG_SESSION_TYPE', '') == 'wayland':
-    from blanking_wayland import display_wake, display_sleep, display_on, display_restore
-elif os.environ.get('XDG_SESSION_TYPE', '') in ('x11', 'xorg'):
-    from blanking_x import display_wake, display_sleep, display_on, display_restore
-else:
-    from blanking_console import display_wake, display_sleep, display_on, display_restore
+# Create the right display object
+for c in (Wayland, Console):
+    if c.active():
+        DISPLAY = c()
+        break
 
 # Set the variables so we can easily change the program
 FULLSCREEN = True
@@ -40,7 +41,6 @@ PIC_DIRECTORY = '/home/pi/Export1080p/'
 # Time (hour, minute) of sleep and wake each day
 WAKE = (6, 30)
 SLEEP = (21,30)
-
 
 def format_filename(filename):
     """Format the filename string to display the date, depending on the global FORMAT."""
@@ -231,7 +231,7 @@ while True:
         or (f.type == pygame.KEYDOWN and (f.key == pygame.K_SPACE))
         or (f.type == pygame.MOUSEBUTTONDOWN and f.button == 2)):
 
-        if display_on():
+        if DISPLAY.on():
             if random.random() < 0.1:
                 # Every tenth time or so, pick a picture from a random day, just to
                 # change things up a bit
@@ -317,33 +317,33 @@ while True:
     # Blank the screen on pressing 'b'
     if (f.type == pygame.KEYDOWN
         and f.key == pygame.K_b):
-        display_sleep()
+        DISPLAY.sleep()
     # Any other key or mouse down makes sure we are awake if we are not
-    elif (f.type == pygame.KEYDOWN or f.type == pygame.MOUSEBUTTONDOWN) and not display_on():
-        display_wake()
+    elif (f.type == pygame.KEYDOWN or f.type == pygame.MOUSEBUTTONDOWN) and not DISPLAY.on():
+        DISPLAY.wake()
         show()
 
     # Wake the screen at the same time every day
     if f.type == SCREEN_WAKE:
-        display_wake()
+        DISPLAY.wake()
         show()
         # Set a sleep timer for 24 hours from now for the next wake
         pygame.time.set_timer(SCREEN_WAKE, 1000*60*60*24)
 
     # Sleep the screen at the same time every day
     if f.type == SCREEN_SLEEP:
-        display_sleep()
+        DISPLAY.sleep()
         # Set a sleep timer for 24 hours from now for the next sleep
         pygame.time.set_timer(SCREEN_SLEEP, 1000*60*60*24)
 
     # Update the time every minute
     if f.type == UPDATE_TIME:
-        # every so often when it is not time-sensitive, do a hard refresh of display_on
+        # every so often when it is not time-sensitive, do a hard refresh of DISPLAY.on
         # Refresh the current picture, which will update the time
-        if display_on(check=True):
+        if DISPLAY.on(check=True):
             show()
         # Set the next update at the start of the next minute
         pygame.time.set_timer(UPDATE_TIME, next_time())
 
 # Just before exiting, restore the screensaver settings
-display_restore()
+DISPLAY.restore()
