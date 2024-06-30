@@ -16,6 +16,11 @@ from math import log
 import itertools
 from normdist import NormalDist
 
+if 'DISPLAY' in os.environ:
+    from blanking_x import display_wake, display_sleep, display_on, display_restore
+else:
+    from blanking_console import display_wake, display_sleep, display_on, display_restore
+
 # Set the variables so we can easily change the program
 FULLSCREEN = True
 SMALL_SCREEN_SIZE=(600,400)
@@ -35,10 +40,6 @@ PIC_DIRECTORY = '/home/pi/Export1080p/'
 WAKE = (6, 30)
 SLEEP = (21,30)
 
-if 'DISPLAY' in os.environ:
-    from .blanking_x import display_wake, display_sleep, display_on, display_restore
-else:
-    from .blanking_console import display_wake, display_sleep, display_on, display_restore
 
 def format_filename(filename):
     """Format the filename string to display the date, depending on the global FORMAT."""
