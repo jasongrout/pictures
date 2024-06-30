@@ -213,7 +213,7 @@ def show(filename = None):
 PIC_HISTORY = []
 
 # The position of the current picture in the history array
-PIC_HISTORY_INDEX = -1
+PIC_HISTORY_INDEX = len(PIC_HISTORY) - 1
 
 # Tracking data for the list of possible pictures, weights, etc.
 PIC_FILES = []
@@ -328,7 +328,7 @@ while True:
             x = random.choice(PIC_GROUPS[day])
             PIC_HISTORY.append(x)
             PICS_SEEN.add(x)
-            PIC_HISTORY_INDEX = -1
+            PIC_HISTORY_INDEX = len(PIC_HISTORY) - 1
 
             show(PIC_HISTORY[PIC_HISTORY_INDEX])
 
@@ -350,7 +350,7 @@ while True:
     # Show the previous picture in history
     if ((f.type == pygame.KEYDOWN and f.key == pygame.K_LEFT)
         or (f.type == pygame.MOUSEBUTTONDOWN and f.button == 1)):
-        if len(PIC_HISTORY) > -PIC_HISTORY_INDEX:
+        if PIC_HISTORY_INDEX > 0:
             PIC_HISTORY_INDEX -= 1
             show(PIC_HISTORY[PIC_HISTORY_INDEX])
             pygame.time.set_timer(PICTURE_CHANGE,DISPLAY_TIME_MS)
@@ -358,7 +358,7 @@ while True:
     # Show the next picture in history
     if ((f.type == pygame.KEYDOWN and f.key == pygame.K_RIGHT)
         or (f.type == pygame.MOUSEBUTTONDOWN and f.button == 3)):
-        if PIC_HISTORY_INDEX < -1:
+        if PIC_HISTORY_INDEX < len(PIC_HISTORY) - 1:
             PIC_HISTORY_INDEX += 1
             show(PIC_HISTORY[PIC_HISTORY_INDEX])
             pygame.time.set_timer(PICTURE_CHANGE,DISPLAY_TIME_MS)
