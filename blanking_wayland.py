@@ -1,5 +1,6 @@
 import subprocess
 import re
+import time
 ################################################################
 ## BEGIN wayland-based screen blanking
 ###############################################################
@@ -52,6 +53,8 @@ def display_sleep():
 def display_wake():
     """Turn on the display."""
     subprocess.run('wlr-randr --output HDMI-A-1 --on', shell=True)
+    # Let the display wake up before trying to show anything
+    time.sleep(2)
 
 def display_on(check=False):
     """Return True if the display is on, otherwise False."""
