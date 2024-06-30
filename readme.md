@@ -11,10 +11,15 @@ This screensaver tries to show an interesting assortment of pictures. It feature
 
 ## Pi setup
 
-
 - install pygame
 - Make sure your monitor is set to 1080p resolution
 - Run the program by opening a terminal and typing `python picture.py` or [setting up a desktop link](https://www.raspberrypi.org/forums/viewtopic.php?t=248380).
+
+If you set up the program in your bashrc, you can use flock to make sure that it only launches once:
+
+```
+flock -n /tmp/my_program.lock python my_program.py
+```
 
 ### Pictures
 
