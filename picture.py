@@ -35,103 +35,10 @@ PIC_DIRECTORY = '/home/pi/Export1080p/'
 WAKE = (6, 30)
 SLEEP = (21,30)
 
-
-
-# import stuff we need
-
-################################################################
-## BEGIN X-based screen blanking
-###############################################################
-
-# Getting screen blanking to work well is a bit tricky.
-# 1. Edit /boot/config.txt and add 'hdmi_blanking=1' so that we can trigger the dpms off mode (see https://www.raspberrypi.org/documentation/configuration/config-txt/video.md and https://github.com/raspberrypi/linux/issues/487.)
-# 2. When this program is started, turn off the screen saver and dpms timeouts. Turn these back on when exiting. Note that if xscreensaver is installed, it already disables the default screensaver timeouts and sets the dpms timeouts and disables the dpms. However, when we force dpms off mode below, we activate dpms, which means that the existing timeouts then apply.
-
-# SCREENSAVER_SETTINGS = {}
-# def screensaver_off():
-#     global SCREENSAVER_SETTINGS
-#     xset = subprocess.check_output(['xset', '-q']).decode('utf-8')
-#     m=re.search(r'^\s*timeout:\s*(\d+)\s*cycle:\s*(\d+)', xset, re.MULTILINE)
-#     if m:
-#         SCREENSAVER_SETTINGS['timeout'] = int(m.groups()[0])
-#         SCREENSAVER_SETTINGS['cycle'] = int(m.groups()[1])
-
-#     m=re.search(r'^\s*Standby:\s*(\d+)\s*Suspend:\s*(\d+)\s*Off:\s*(\d+)', xset, re.MULTILINE)
-#     if m:
-#         SCREENSAVER_SETTINGS['standby'] = int(m.groups()[0])
-#         SCREENSAVER_SETTINGS['suspend'] = int(m.groups()[1])
-#         SCREENSAVER_SETTINGS['off'] = int(m.groups()[2])
-#     m = re.search(r'DPMS is (Enabled|Disabled)', xset)
-#     if m:
-#         setting = m.groups()[0]
-#         if setting == 'Enabled':
-#             SCREENSAVER_SETTINGS['enabled'] = True
-#         elif setting == 'Disabled':
-#             SCREENSAVER_SETTINGS['enabled'] = False
-
-#     subprocess.run('xset s 0 0 '.split())
-#     subprocess.run('xset dpms 0 0 0'.split())
-
-# def screensaver_restore():
-#     global SCREENSAVER_SETTINGS
-#     if 'timeout' in SCREENSAVER_SETTINGS:
-#         subprocess.run('xset s {timeout} {cycle}'.format(**SCREENSAVER_SETTINGS).split())
-#     if 'standby' in SCREENSAVER_SETTINGS:
-#         subprocess.run('xset dpms {standby} {suspend} {off}'.format(**SCREENSAVER_SETTINGS).split())
-#     if 'enabled' in SCREENSAVER_SETTINGS:
-#         subprocess.run('xset {}dpms'.format('+' if SCREENSAVER_SETTINGS['enabled'] else '-').split())
-
-# os.environ['SDL_VIDEO_ALLOW_SCREENSAVER']='1'
-# screensaver_off()
-# def display_sleep_x():
-#     """Turn off the display."""
-#     subprocess.run('xset dpms force off'.split())
-
-# def display_wake_x():
-#     """Turn on the display."""
-#     subprocess.run('xset dpms force on'.split())
-
-# def display_on_x():
-#     """Return True if the display is on, otherwise False."""
-#     output = subprocess.check_output('xset q'.split(), text=True)
-#     if 'Monitor is On' in output:
-#         return True
-#     elif 'Monitor is Off' in output:
-#         return False
-#     else:
-#         raise ValueError('Could not determine whether monitor was on or not')
-
-################################################################
-## END X-based screen blanking
-###############################################################
-
-def display_sleep():
-    """Turn off the display."""
-    global DISPLAY_ON
-    # see https://forums.raspberrypi.com/viewtopic.php?t=363392 for more info
-    os.system('ddcutil setvcp d6 4')
-    DISPLAY_ON = False
-
-def display_wake():
-    """Turn on the display."""
-    global DISPLAY_ON
-    # see https://forums.raspberrypi.com/viewtopic.php?t=363392 for more info
-    os.system('ddcutil setvcp d6 1')
-    DISPLAY_ON = True
-
-def display_on():
-    """Return True if the display is on, otherwise False."""
-    # TODO: use pykms directly
-    output = subprocess.check_output('ddcutil getvcp d6', shell=True).decode()
-    if '0x01' in output:
-        return True
-    elif '0x04' in output:
-        return False
-    else:
-        raise ValueError('Could not determine whether monitor was on or not')
-
-
-DISPLAY_ON = display_on()
+if 'DISPLAY' in os.environ:
+    from .blanking_x import display_wake, display_sleep, display_on, display_restore
+else:
+    from .blanking_console import display_wake, display_sleep, display_on, display_restore
 
 def format_filename(filename):
     """Format the filename string to display the date, depending on the global FORMAT."""
@@ -322,7 +229,7 @@ while True:
         or (f.type == pygame.KEYDOWN and (f.key == pygame.K_SPACE))
         or (f.type == pygame.MOUSEBUTTONDOWN and f.button == 2)):
 
-        if DISPLAY_ON:
+        if display_on():
             if random.random() < 0.1:
                 # Every tenth time or so, pick a picture from a random day, just to
                 # change things up a bit
@@ -410,7 +317,7 @@ while True:
         and f.key == pygame.K_b):
         display_sleep()
     # Any other key or mouse down makes sure we are awake if we are not
-    elif (f.type == pygame.KEYDOWN or f.type == pygame.MOUSEBUTTONDOWN) and not DISPLAY_ON:
+    elif (f.type == pygame.KEYDOWN or f.type == pygame.MOUSEBUTTONDOWN) and not display_on():
         display_wake()
 
     # Wake the screen at the same time every day
@@ -427,13 +334,12 @@ while True:
 
     # Update the time every minute
     if f.type == UPDATE_TIME:
-        # every so often when it is not time-sensitive, check DISPLAY_ON
-        DISPLAY_ON = display_on()
+        # every so often when it is not time-sensitive, do a hard refresh of display_on
         # Refresh the current picture, which will update the time
-        if DISPLAY_ON:
+        if display_on(check=True):
             show()
         # Set the next update at the start of the next minute
         pygame.time.set_timer(UPDATE_TIME, next_time())
 
 # Just before exiting, restore the screensaver settings
-# screensaver_restore()
+display_restore()
