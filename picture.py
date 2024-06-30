@@ -321,10 +321,12 @@ while True:
     # Any other key or mouse down makes sure we are awake if we are not
     elif (f.type == pygame.KEYDOWN or f.type == pygame.MOUSEBUTTONDOWN) and not display_on():
         display_wake()
+        show()
 
     # Wake the screen at the same time every day
     if f.type == SCREEN_WAKE:
         display_wake()
+        show()
         # Set a sleep timer for 24 hours from now for the next wake
         pygame.time.set_timer(SCREEN_WAKE, 1000*60*60*24)
 
