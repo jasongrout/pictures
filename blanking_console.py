@@ -1,4 +1,5 @@
 import subprocess
+import os
 
 def display_sleep():
     """Turn off the display."""
