@@ -1,3 +1,5 @@
+import subprocess
+
 def display_sleep():
     """Turn off the display."""
     global DISPLAY_ON

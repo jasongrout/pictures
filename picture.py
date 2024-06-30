@@ -8,7 +8,6 @@ from random import SystemRandom
 import pygame
 import os
 import pygame.freetype
-import subprocess
 import datetime
 from bisect import bisect, bisect_left, bisect_right
 from collections import defaultdict
