@@ -61,11 +61,10 @@ def display_wake():
 
 def display_on(check=False):
     """Return True if the display is on, otherwise False."""
-    return False
-    output = subprocess.check_output('xset q'.split(), text=True)
-    if 'Monitor is On' in output:
+    output = subprocess.check_output('wlr-randr ', shell=True, text=True)
+    if 'Enabled: yes' in output:
         return True
-    elif 'Monitor is Off' in output:
+    elif 'Enabled: no' in output:
         return False
     else:
         raise ValueError('Could not determine whether monitor was on or not')
