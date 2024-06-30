@@ -170,7 +170,12 @@ def show(filename = None):
         filename = CURRENT_FILENAME
         cimage = CURRENT_IMAGE
     else:
-        cimage = pygame.image.load(os.path.join(PIC_DIRECTORY, filename)).convert()
+        try:
+            path = os.path.join(PIC_DIRECTORY, filename)
+            cimage = pygame.image.load(path).convert()
+        except:
+            print(f"Error loading file ${path}")
+            raise
         CURRENT_FILENAME = filename
         CURRENT_IMAGE = cimage
 
