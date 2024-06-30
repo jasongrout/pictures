@@ -16,7 +16,7 @@ import itertools
 from normdist import NormalDist
 
 if 'DISPLAY' in os.environ:
-    from blanking_x import display_wake, display_sleep, display_on, display_restore
+    from blanking_wayland import display_wake, display_sleep, display_on, display_restore
 else:
     from blanking_console import display_wake, display_sleep, display_on, display_restore
 
