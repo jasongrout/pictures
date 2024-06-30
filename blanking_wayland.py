@@ -1,8 +1,7 @@
 import subprocess
 import re
-import os
 ################################################################
-## BEGIN X-based screen blanking
+## BEGIN wayland-based screen blanking
 ###############################################################
 
 # Getting screen blanking to work well is a bit tricky.
@@ -46,18 +45,13 @@ def screensaver_restore():
 # os.environ['SDL_VIDEO_ALLOW_SCREENSAVER']='1'
 # screensaver_off()
 
-def run(cmd):
-    print(f"running: {cmd}")
-    print(subprocess.check_output(cmd, shell=True))
-
 def display_sleep():
     """Turn off the display."""
-    run('wlr-randr --output HDMI-A-1 --off')
-    run('wlr-randr')
+    subprocess.run('wlr-randr --output HDMI-A-1 --off', shell=True)
 
 def display_wake():
     """Turn on the display."""
-    run('wlr-randr --output HDMI-A-1 --on')
+    subprocess.run('wlr-randr --output HDMI-A-1 --on', shell=True)
 
 def display_on(check=False):
     """Return True if the display is on, otherwise False."""
