@@ -152,18 +152,6 @@ def group_by_day(data):
         groups[name[:8]].append(name)
     return groups
 
-# Start pygame up, setting allowed events
-pygame.freetype.init()
-pygame.display.init()
-pygame.event.set_allowed(None)
-pygame.event.set_allowed([pygame.USEREVENT,pygame.KEYDOWN,pygame.QUIT, pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP])
-if FULLSCREEN:
-    pygame.mouse.set_visible(False)
-    screen = pygame.display.set_mode((0,0), pygame.FULLSCREEN) # fullscreen
-else:
-    screen = pygame.display.set_mode(SMALL_SCREEN_SIZE) # development
-
-
 # Define custom pygame events we will use.
 PICTURE_CHANGE = pygame.USEREVENT
 SCREEN_SLEEP = pygame.USEREVENT + 1
@@ -171,7 +159,6 @@ SCREEN_WAKE = pygame.USEREVENT + 2
 UPDATE_TIME = pygame.USEREVENT + 3
 
 random = SystemRandom()
-font = pygame.freetype.SysFont('freesans', FONTSIZE)
 
 CURRENT_FILENAME = None
 CURRENT_IMAGE = None
@@ -282,7 +269,21 @@ def reset_weights():
     #for (d,w) in sorted(zip(days, weights), key=lambda x: x[1]):
     #    print(d,"%f"%day_weight(d), "%f"%w)
 
+print("Loading pictures...")
 reset_weights()
+print("Loaded!")
+
+# Start pygame up, setting allowed events
+pygame.freetype.init()
+pygame.display.init()
+pygame.event.set_allowed(None)
+pygame.event.set_allowed([pygame.USEREVENT,pygame.KEYDOWN,pygame.QUIT, pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP])
+if FULLSCREEN:
+    pygame.mouse.set_visible(False)
+    screen = pygame.display.set_mode((0,0), pygame.FULLSCREEN) # fullscreen
+else:
+    screen = pygame.display.set_mode(SMALL_SCREEN_SIZE) # development
+font = pygame.freetype.SysFont('freesans', FONTSIZE)
 
 # Show the first picture after a second
 pygame.time.set_timer(PICTURE_CHANGE, 1000)
@@ -392,7 +393,7 @@ while True:
         and (f.mod & pygame.KMOD_SHIFT != 0)):
         break
 
-    # Quit if you  hold down a mouse button for 30 seconds
+    # Quit if you hold down a mouse button for 30 seconds
     if (f.type == pygame.MOUSEBUTTONDOWN and f.button in [1,2,3]):
         pygame.time.set_timer(pygame.QUIT,1000*30)
     if (f.type == pygame.MOUSEBUTTONUP and f.button in [1,2,3]):
