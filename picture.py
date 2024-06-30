@@ -121,7 +121,6 @@ SLEEP = (21,30)
 ## END X-based screen blanking
 ###############################################################
 
-
 def display_sleep():
     """Turn off the display."""
     global DISPLAY_ON
@@ -146,6 +145,9 @@ def display_on():
         return False
     else:
         raise ValueError('Could not determine whether monitor was on or not')
+
+
+DISPLAY_ON = display_on()
 
 def format_filename(filename):
     """Format the filename string to display the date, depending on the global FORMAT."""
