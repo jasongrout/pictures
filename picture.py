@@ -1,24 +1,8 @@
 #!/usr/bin/env python3
 
-
-# Things we can still do:
-
-# [X] Turn off screen at night (see note below about `xset dpms force off`. Also see https://wiki.libsdl.org/FAQUsingSDL#Why_does_SDL_disable_my_screensaver_by_default.3F about allowing the screen to blank while running the program - we'll need to set an environment variable in this program using os.environ).
-# [ ] Save the pic history to a file to easily pick it back up again
-# [ ] bias against showing pics we've already shown. Perhaps if we generate a pic already in the history list, try at least once to pick a new random picture, or after we show a picture, take it out of the list.
-# [ ] Be able to rate a picture from 1-5, show the rating next, maybe make it more likely to be picked. Be able to say "don't show this pic again".
-
-# Later
-# [ ] Make it easy to turn on or off LED lights. Ask about good default.
-# [ ] Picture selection logic - higher preference to pictures in similar season, pics with higher ratings, etc.
-# [ ] Print info about the pic on the pic display (date, filename, keywords, caption, etc.)
-# [ ] up/down keys go through the pictures chronologically?
-# [ ] Handle pics with different sizes/orientations. Rotate? Put upright and blur the background? Center smaller pics
-# [ ] Hook up hardware buttons and switch: buttons to go prev/next, switch to hold a pic, buttons to rate a pic up or down.
-
-# [ ] Read in the next random pic + the next and previous chronological pics pre-emptively. We spend a lot of time in io buffers,
-#     so we should be able to eagerly do that read
-# [x] display_on is called a lot - perhaps we cache its output and only call every once in a while?
+""" 
+Display pictures in a screensaver
+"""
 
 from random import SystemRandom
 import pygame

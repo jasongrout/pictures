@@ -84,3 +84,22 @@ To automatically log in and run a program: http://www.raspberry-projects.com/pi/
 
 To control the LEDs: https://www.jeffgeerling.com/blogs/jeff-geerling/controlling-pwr-act-leds-raspberry-pi - set the trigger for each led (if 'none' doesn't work to turn them off, try 'gpio')
 
+### Items to do
+
+- [X] Turn off screen at night (see note below about `xset dpms force off`. Also see https://wiki.libsdl.org/FAQUsingSDL#Why_does_SDL_disable_my_screensaver_by_default.3F about allowing the screen to blank while running the program - we'll need to set an environment variable in this program using os.environ).
+- [x] Move from using X to just using the display buffer from the command line and ddcutil to actually turn a monitor off
+- [ ] Save the pic history to a file to easily pick it back up again after restart
+- [x] bias against showing pics we've already shown. Perhaps if we generate a pic already in the history list, try at least once to pick a new random picture, or after we show a picture, take it out of the list.
+- [ ] Be able to rate a picture from 1-5, show the rating next, maybe make it more likely to be picked. Be able to say "don't show this pic again".
+- [ ] Make it easy to turn on or off LED lights. Ask about good default.
+- [x] Picture selection logic - higher preference to pictures in similar season, pics with higher ratings, etc.
+- [ ] Print info about the pic on the pic display (date, filename, keywords, caption, etc.)
+- [x] up/down keys go through the pictures chronologically?
+- [ ] Handle pics with different sizes/orientations. Rotate? Put upright and blur the background? Center smaller pics
+
+- [ ] Read in the next random pic + the next and previous chronological pics pre-emptively. We spend a lot of time in io buffers, so we should be able to eagerly do that read. Perhaps we store NEXT_PICTURE and NEXT_PICTURE_DIRECTION. Anytime we get a new picture direction, we go ahead and calculate the next picture in that direction and store it as well. That way going going in a specific direction gets much faster.
+- [ ] Pressing 'f' toggles to/from the filename format. Otherwise Enter just moves us to/from date or empty. Since we hardly ever use the filename format, we are always skipping past it
+- [ ] 'h' and '?' shows the keystrokes and mousebuttons registered on a blank screen
+- [x] display_on is called a lot - perhaps we cache its output and only call every once in a while?
+
+- [ ] Hook up hardware buttons and switch: buttons to go prev/next, switch to hold a pic, buttons to rate a pic up or down.
