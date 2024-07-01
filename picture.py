@@ -71,37 +71,46 @@ random = SystemRandom()
 
 CURRENT_FILENAME = None
 CURRENT_IMAGE = None
-def show(filename = None):
-    """Show a picture. If filename is not specified, refresh the current picture."""
+
+NEXT_FILENAME = None
+NEXT_IMAGE = None
+
+def load(filename):
+    try:
+        path = os.path.join(PIC_DIRECTORY, filename)
+        image = pygame.image.load(path).convert()
+    except:
+        print(f"Error loading file ${path}")
+        raise
+    # Sometimes we are halting because cimage seems to be None below. We'll try
+    # to trap that error early.
+    if image is None:
+        raise ValueError(f"Could not load image ${filename}")
+    return image
+
+def show(file = None):
+    """Show a picture. file is a (filename, pygame image) pair. If file not specified, refresh the current picture."""
     global CURRENT_FILENAME
     global CURRENT_IMAGE
-    if filename is None:
-        filename = CURRENT_FILENAME
-        cimage = CURRENT_IMAGE
-    else:
-        try:
-            path = os.path.join(PIC_DIRECTORY, filename)
-            cimage = pygame.image.load(path).convert()
-        except:
-            print(f"Error loading file ${path}")
-            raise
-        CURRENT_FILENAME = filename
-        CURRENT_IMAGE = cimage
+
+    if file is not None:
+        CURRENT_FILENAME, CURRENT_IMAGE = file
 
     screen_width = screen.get_width()
     screen_height = screen.get_height()
 
+    # blank the screen
     screen.fill([0,0,0])
+
+    # Show the image
     if FULLSCREEN:
-        x = screen_width
-        n = cimage.get_width()
-        offset = round((x-n)/2)
-        screen.blit(cimage, (offset,0))
+        offset = round((screen_width - CURRENT_IMAGE.get_width()) / 2)
+        screen.blit(CURRENT_IMAGE, (offset, 0))
     else:
-        pygame.transform.smoothscale(cimage, SMALL_SCREEN_SIZE, screen) # development
+        pygame.transform.smoothscale(CURRENT_IMAGE, SMALL_SCREEN_SIZE, screen) # development
 
     # Put the filename 5 pixels from the bottom of the screen, 10 pixels from left edge
-    words = font.render( format_filename(filename),  fgcolor=(255,255,255), bgcolor=(0,0,0,100))
+    words = font.render( format_filename(CURRENT_FILENAME),  fgcolor=(255,255,255), bgcolor=(0,0,0,100))
     screen.blit(words[0], (10, screen_height - words[0].get_height() - 5))
 
     # Time is 5 pixels from bottom, 10 pixels from right edge
@@ -187,6 +196,19 @@ print("Loading pictures...")
 reset_weights()
 print("Loaded!")
 
+def choose_random_pic():
+    """Return a random pic according to the distribution"""
+    if random.random() < 0.1:
+        # Every tenth time or so, pick a picture from a random day, just to
+        # change things up a bit
+        day = random.choice(PIC_DAYS)
+    else:
+        # pick a day, weighted according to cumdist, then pick a random pic from that day
+        # See https://docs.python.org/3.5/library/random.html#examples-and-recipes
+        day = PIC_DAYS[bisect(CUM_DAY_WEIGHTS, random.random() * CUM_DAY_WEIGHTS[-1])]
+    
+    return random.choice(PIC_GROUPS[day]), day
+
 # Start pygame up, setting allowed events
 pygame.freetype.init()
 pygame.display.init()
@@ -222,6 +244,9 @@ pygame.time.set_timer(SCREEN_WAKE, next_time(WAKE))
 pygame.time.set_timer(SCREEN_SLEEP, next_time(SLEEP))
 pygame.time.set_timer(UPDATE_TIME, next_time())
 
+NEXT_FILENAME, NEXT_DAY = choose_random_pic()
+NEXT_IMAGE = load(NEXT_FILENAME)
+
 # Handle events
 while True:
     f=pygame.event.wait()
@@ -232,27 +257,25 @@ while True:
         or (f.type == pygame.MOUSEBUTTONDOWN and f.button == 2)):
 
         if DISPLAY.on():
-            if random.random() < 0.1:
-                # Every tenth time or so, pick a picture from a random day, just to
-                # change things up a bit
-                day = random.choice(PIC_DAYS)
-            else:
-                # pick a day, weighted according to cumdist, then pick a random pic from that day
-                # See https://docs.python.org/3.5/library/random.html#examples-and-recipes
-                day = PIC_DAYS[bisect(CUM_DAY_WEIGHTS, random.random() * CUM_DAY_WEIGHTS[-1])]
-            x = random.choice(PIC_GROUPS[day])
-            PIC_HISTORY.append(x)
-            PICS_SEEN.add(x)
+            if NEXT_FILENAME is None:
+                NEXT_FILENAME, NEXT_DAY = choose_random_pic()
+                NEXT_IMAGE = load(NEXT_FILENAME)
+            PIC_HISTORY.append(NEXT_FILENAME)
+            PICS_SEEN.add(NEXT_FILENAME)
             PIC_HISTORY_INDEX = len(PIC_HISTORY) - 1
 
-            show(PIC_HISTORY[PIC_HISTORY_INDEX])
+            show((NEXT_FILENAME, NEXT_IMAGE))
 
             # Update the pics to remove the one we just showed so we don't show it again
-            PIC_GROUPS[day].remove(x)
-            if len(PIC_GROUPS[day])==0:
-                PIC_DAYS.remove(day)
-                del PIC_GROUPS[day]
+            PIC_GROUPS[NEXT_DAY].remove(NEXT_FILENAME)
+            if len(PIC_GROUPS[NEXT_DAY])==0:
+                PIC_DAYS.remove(NEXT_DAY)
+                del PIC_GROUPS[NEXT_DAY]
             reset_weights()
+
+            # Update NEXT_FILENAME, etc.
+            NEXT_FILENAME, NEXT_DAY = choose_random_pic()
+            NEXT_IMAGE = load(NEXT_FILENAME)
 
         pygame.time.set_timer(PICTURE_CHANGE,DISPLAY_TIME_MS)
 
@@ -267,7 +290,8 @@ while True:
         or (f.type == pygame.MOUSEBUTTONDOWN and f.button == 1)):
         if PIC_HISTORY_INDEX > 0:
             PIC_HISTORY_INDEX -= 1
-            show(PIC_HISTORY[PIC_HISTORY_INDEX])
+            file = PIC_HISTORY[PIC_HISTORY_INDEX]
+            show((file, load(file)))
             pygame.time.set_timer(PICTURE_CHANGE,DISPLAY_TIME_MS)
 
     # Show the next picture in history
@@ -275,7 +299,8 @@ while True:
         or (f.type == pygame.MOUSEBUTTONDOWN and f.button == 3)):
         if PIC_HISTORY_INDEX < len(PIC_HISTORY) - 1:
             PIC_HISTORY_INDEX += 1
-            show(PIC_HISTORY[PIC_HISTORY_INDEX])
+            file = PIC_HISTORY[PIC_HISTORY_INDEX]
+            show((file, load(file)))
             pygame.time.set_timer(PICTURE_CHANGE,DISPLAY_TIME_MS)
 
     # Show the next picture in sorted order that we haven't seen yet (i.e., chronologically)
@@ -284,7 +309,8 @@ while True:
         # Find the place just after where the current pic would have been
         index = bisect_right(PIC_FILES, CURRENT_FILENAME)
         if index < len(PIC_FILES):
-            show(PIC_FILES[index])
+            file = PIC_FILES[index]
+            show((file, load(file)))
             pygame.time.set_timer(PICTURE_CHANGE,DISPLAY_TIME_MS)
 
     # Show the previous picture in sorted order that we haven't seen yet (i.e., chronologically)
@@ -294,7 +320,8 @@ while True:
         # The pic we want is just before this.
         index = bisect_left(PIC_FILES, CURRENT_FILENAME) - 1
         if index > 0:
-            show(PIC_FILES[index])
+            file = PIC_FILES[index]
+            show((file, load(file)))
             pygame.time.set_timer(PICTURE_CHANGE,DISPLAY_TIME_MS)
 
     # Quit the program
