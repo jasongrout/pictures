@@ -25,13 +25,17 @@ class Console(Display):
         """Return True if the display is on, otherwise False."""
         if check:
             # TODO: use pykms directly
-            output = subprocess.check_output('ddcutil getvcp d6', shell=True).decode()
-            if '0x01' in output:
-                self.DISPLAY_ON = True
-            elif '0x04' in output:
+            try:
+                output = subprocess.check_output('ddcutil getvcp d6', shell=True).decode()
+                if '0x01' in output:
+                    self.DISPLAY_ON = True
+                elif '0x04' in output:
+                    self.DISPLAY_ON = False
+                else:
+                    raise ValueError('Could not determine whether monitor was on or not')
+            except subprocess.CalledProcessError:
+                # TODO: check exit code to make sure monitor was not reachable
                 self.DISPLAY_ON = False
-            else:
-                raise ValueError('Could not determine whether monitor was on or not')
         return self.DISPLAY_ON
 
     def restore(self):
