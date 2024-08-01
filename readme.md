@@ -35,14 +35,14 @@ In order to get the night mode to work (which suspends the monitor to power-savi
 
 ## How to use the program
 
-- At any time, to pick and display a new random picture, press `space` or the middle mouse button.
-- To show the picture that was displayed before the current picture, press the left arrow key or the left mouse button. If the first picture is currently displayed, these do nothing.
-- To show the picture that was displayed after the current picture, press the right arrow key or right mouse button. If the last picture is currently displayed, these do nothing.
-- To cycle the information displayed, press the enter key. Information display cycles between:
+- At any time, to pick and display a new random picture, press `space`, the middle mouse button, or the keypad `0` key.
+- To show the picture that was displayed before the current picture, press the left arrow key, left mouse button, or keypad `4` key. If the first picture is currently displayed, these do nothing.
+- To show the picture that was displayed after the current picture, press the right arrow key, right mouse button, or keypad `6` key. If the last picture is currently displayed, these do nothing.
+- To cycle the information displayed, press the enter key or the keypad enter key. Information display cycles between:
   1. No information displayed
   2. The date displayed (derived from the filename)
   3. The filename displayed (without the extension)
-- To blank the screen, press the `b` key. You can do this at night to put the monitor to sleep
+- To blank the screen, press the `b` key or the keypad minus key. You can do this at night to put the monitor to sleep
 - To wake the monitor, press any key or move the mouse (you can put it back to sleep with `b` again)
 - To quit the program, press `Shift Escape` or hold any mouse button for 30 seconds (these are designed so that young children do not inadvertently quit the program)
 

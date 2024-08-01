@@ -256,13 +256,16 @@ pygame.time.set_timer(SCREEN_WAKE, next_time(WAKE))
 pygame.time.set_timer(SCREEN_SLEEP, next_time(SLEEP))
 pygame.time.set_timer(UPDATE_TIME, next_time())
 
+
+
+
 # Handle events
 while True:
     f=pygame.event.wait()
 
     # Show a new random picture
     if (f.type == PICTURE_CHANGE
-        or (f.type == pygame.KEYDOWN and (f.key == pygame.K_SPACE))
+        or (f.type == pygame.KEYDOWN and f.key in (pygame.K_SPACE, pygame.K_KP_0))
         or (f.type == pygame.MOUSEBUTTONDOWN and f.button == 2)):
 
         if DISPLAY.on():
@@ -283,12 +286,12 @@ while True:
 
 
     # Change the date format
-    if (f.type == pygame.KEYDOWN and f.key == pygame.K_RETURN):
+    if (f.type == pygame.KEYDOWN and f.key in (pygame.K_RETURN, pygame.K_KP_ENTER)):
         FORMAT = (FORMAT+1) % 3
         show()
 
     # Show the previous picture in history
-    if ((f.type == pygame.KEYDOWN and f.key == pygame.K_LEFT)
+    if ((f.type == pygame.KEYDOWN and f.key in (pygame.K_LEFT, pygame.K_KP_4))
         or (f.type == pygame.MOUSEBUTTONDOWN and f.button == 1)):
         if PIC_HISTORY_INDEX > 0:
             PIC_HISTORY_INDEX -= 1
@@ -302,7 +305,7 @@ while True:
             pygame.time.set_timer(PICTURE_CHANGE,DISPLAY_TIME_MS)
 
     # Show the next picture in history
-    if ((f.type == pygame.KEYDOWN and f.key == pygame.K_RIGHT)
+    if ((f.type == pygame.KEYDOWN and f.key in (pygame.K_RIGHT, pygame.K_KP_6))
         or (f.type == pygame.MOUSEBUTTONDOWN and f.button == 3)):
         if PIC_HISTORY_INDEX < len(PIC_HISTORY) - 1:
             PIC_HISTORY_INDEX += 1
@@ -319,7 +322,7 @@ while True:
 
     # Show the next picture in sorted order that we haven't seen yet (i.e., chronologically)
     # Do not put this pic in our history
-    if f.type == pygame.KEYDOWN and f.key == pygame.K_DOWN:
+    if f.type == pygame.KEYDOWN and f.key in (pygame.K_DOWN, pygame.K_KP_2):
         # Find the place just after where the current pic would have been
         index = bisect_right(PIC_FILES, CURRENT_FILENAME)
         if index < len(PIC_FILES):
@@ -333,7 +336,7 @@ while True:
 
     # Show the previous picture in sorted order that we haven't seen yet (i.e., chronologically)
     # Do not put this pic in our history
-    if f.type == pygame.KEYDOWN and f.key == pygame.K_UP:
+    if f.type == pygame.KEYDOWN and f.key in (pygame.K_UP, pygame.K_KP_8):
         # Find the place in the current pics array where we would have to insert the current pic
         # The pic we want is just before this.
         index = bisect_left(PIC_FILES, CURRENT_FILENAME) - 1
@@ -365,8 +368,7 @@ while True:
         pygame.time.set_timer(pygame.QUIT,0)
 
     # Blank the screen on pressing 'b'
-    if (f.type == pygame.KEYDOWN
-        and f.key == pygame.K_b):
+    if (f.type == pygame.KEYDOWN and f.key in (pygame.K_b, pygame.K_KP_MINUS)):
         DISPLAY.sleep()
     # Any other key or mouse down makes sure we are awake if we are not
     elif (f.type == pygame.KEYDOWN or f.type == pygame.MOUSEBUTTONDOWN) and not DISPLAY.on():
