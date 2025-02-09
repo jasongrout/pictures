@@ -259,7 +259,11 @@ def next_time(time = None):
         want = now.replace(hour=time[0], minute=time[1], second=0, microsecond=0)
     if now >= want:
         want += datetime.timedelta(days=1)
-    return int((want - now).total_seconds()*1000)
+
+    # Sometimes a timer will run just before it is supposed to, leading to a ms of 0
+    # So we enforce that we will wait at least 1 second
+    ms = max(1000, int((want - now).total_seconds()*1000))
+    return ms
 
 
 # Initialize the display sleep and wake timers
