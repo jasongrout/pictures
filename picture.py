@@ -166,7 +166,7 @@ def reset_weights():
 
     # If the pic directory has changed (or mtime been reset), rescan all the files
     if  PIC_DIRECTORY_MTIME != os.path.getmtime(PIC_DIRECTORY):
-        PIC_FILES = sorted(set(os.listdir(PIC_DIRECTORY)) - PICS_SEEN)
+        PIC_FILES = sorted(set(x for x in os.listdir(PIC_DIRECTORY) if not x.endswith('.json')) - PICS_SEEN)
         PIC_DIRECTORY_MTIME = os.path.getmtime(PIC_DIRECTORY)
         PIC_GROUPS = group_by_day(PIC_FILES)
         PIC_DAYS = list(PIC_GROUPS.keys())
