@@ -5,6 +5,7 @@ Display pictures in a screensaver
 """
 
 from random import SystemRandom
+import datetime
 import pygame
 import os
 import pygame.freetype
@@ -17,10 +18,19 @@ from normdist import NormalDist
 from blanking_console import Console
 from blanking_wayland import Wayland
 
+def logmsg(msg):
+    timemsg =f"{datetime.datetime.now()} {msg}" 
+    print(timemsg)
+    with open('pictures.log', 'a') as f:
+        f.write(timemsg+'\n')
+
+
 # Create the right display object
 for c in (Wayland, Console):
     if c.active():
+        logmsg(f"display {c}")
         DISPLAY = c()
+        logmsg(f"display on: {DISPLAY.on(check=True)}")
         break
 
 # Set the variables so we can easily change the program
@@ -41,6 +51,7 @@ PIC_DIRECTORY = '/home/pi/Export1080p/'
 # Time (hour, minute) of sleep and wake each day
 WAKE = (6, 30)
 SLEEP = (21,30)
+
 
 def format_filename(filename):
     """Format the filename string to display the date, depending on the global FORMAT."""
@@ -195,9 +206,9 @@ def reset_weights():
     #for (d,w) in sorted(zip(days, weights), key=lambda x: x[1]):
     #    print(d,"%f"%day_weight(d), "%f"%w)
 
-print("Loading pictures...")
+logmsg("Loading pictures...")
 reset_weights()
-print("Loaded!")
+logmsg("Loaded!")
 
 def choose_random_pic():
     """Return a random pic according to the distribution"""
@@ -374,6 +385,7 @@ while True:
     elif (f.type == pygame.KEYDOWN or f.type == pygame.MOUSEBUTTONDOWN) and not DISPLAY.on():
         DISPLAY.wake()
         show()
+        logmsg(f"Woke, display is now {DISPLAY.on(check=True)}")
 
     # Wake the screen at the same time every day
     if f.type == SCREEN_WAKE:
@@ -381,6 +393,7 @@ while True:
         show()
         # Set a sleep timer for 24 hours from now for the next wake
         pygame.time.set_timer(SCREEN_WAKE, 1000*60*60*24)
+        logmsg(f"Woke, display is now {DISPLAY.on(check=True)}")
 
     # Sleep the screen at the same time every day
     if f.type == SCREEN_SLEEP:
@@ -394,8 +407,13 @@ while True:
         # Refresh the current picture, which will update the time
         if DISPLAY.on(check=True):
             show()
+            logmsg("Refreshed time")
+        else:
+            logmsg("skipped time refresh, DISPLAY.on is {DISPLAY.on(check=True)}")
         # Set the next update at the start of the next minute
-        pygame.time.set_timer(UPDATE_TIME, next_time())
+        nexttime = next_time()
+        pygame.time.set_timer(UPDATE_TIME, nexttime)
+        logmsg(f"Set time refresh to {nexttime}")
 
 # Just before exiting, restore the screensaver settings
 DISPLAY.restore()
