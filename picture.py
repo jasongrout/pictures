@@ -64,12 +64,15 @@ def format_filename(filename):
             return ''
     elif FORMAT == 2:
         return os.path.splitext(filename)[0]
+    
+def picday(filename):
+    return filename[:8]
 
 def group_by_day(data):
     """Group picture filenames like 20200528.jpg into days."""
     groups = defaultdict(list)
     for name in data:
-        groups[name[:8]].append(name)
+        groups[picday(name)].append(name)
     return groups
 
 # Define custom pygame events we will use.
@@ -82,6 +85,14 @@ random = SystemRandom()
 
 CURRENT_FILENAME = None
 CURRENT_IMAGE = None
+
+DELETED_PICS_FILE = 'deleted_pics.txt'
+
+if os.path.exists(DELETED_PICS_FILE):
+    with open(DELETED_PICS_FILE, 'r') as f:
+        DELETED_PICS = set(f.read().splitlines())
+else:
+    DELETED_PICS = set()
 
 NEXT_RANDOM_FILENAME = None
 NEXT_RANDOM_IMAGE = None
@@ -166,7 +177,7 @@ def reset_weights():
 
     # If the pic directory has changed (or mtime been reset), rescan all the files
     if  PIC_DIRECTORY_MTIME != os.path.getmtime(PIC_DIRECTORY):
-        PIC_FILES = sorted(set(x for x in os.listdir(PIC_DIRECTORY) if not x.endswith('.json')) - PICS_SEEN)
+        PIC_FILES = sorted(set(x for x in os.listdir(PIC_DIRECTORY) if not x.endswith('.json')) - PICS_SEEN - DELETED_PICS)
         PIC_DIRECTORY_MTIME = os.path.getmtime(PIC_DIRECTORY)
         PIC_GROUPS = group_by_day(PIC_FILES)
         PIC_DAYS = list(PIC_GROUPS.keys())
@@ -270,8 +281,6 @@ def next_time(time = None):
 pygame.time.set_timer(SCREEN_WAKE, next_time(WAKE))
 pygame.time.set_timer(SCREEN_SLEEP, next_time(SLEEP))
 pygame.time.set_timer(UPDATE_TIME, next_time())
-
-
 
 
 # Handle events
@@ -390,6 +399,21 @@ while True:
         DISPLAY.wake()
         show()
         logmsg(f"Woke, display is now {DISPLAY.on(check=True)}")
+
+    if (f.type == pygame.KEYDOWN and f.key == pygame.K_DELETE):
+        # Mark the file to not be shown
+        if CURRENT_FILENAME:
+            with open(DELETED_PICS_FILE, 'a') as f:
+                f.write(CURRENT_FILENAME+'\n')
+
+            DELETED_PICS.add(CURRENT_FILENAME)
+
+            # also delete from data structures as in line 237
+            day = picday(CURRENT_FILENAME)
+            PIC_GROUPS[day].remove(CURRENT_FILENAME)
+            if len(PIC_GROUPS[day])==0:
+                PIC_DAYS.remove(day)
+                del PIC_GROUPS[day]
 
     # Wake the screen at the same time every day
     if f.type == SCREEN_WAKE:
